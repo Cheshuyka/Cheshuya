@@ -3,8 +3,22 @@ import pygame
 
 class Hub():
     def __init__(self, screen):
-        im = pygame.image.load("DinoSprites - mort.png")
-        dino = Dino(im, 24, 1, 50, 50)
+        im = pygame.image.load("Cheshuya/Sprites/DinoSprites - mort.png")
+        image = pygame.image.load("Cheshuya/Sprites/stone.png")
+        image1 = pygame.image.load("Cheshuya/Sprites/Hub.jpg")
+        back = pygame.sprite.Sprite()
+        back.image = image1
+        back.rect = back.image.get_rect()
+        back.rect.x = 0
+        back.rect.y = 0
+        all_sprites.add(back)
+        stone = pygame.sprite.Sprite()
+        stone.image = image
+        stone.rect = stone.image.get_rect()
+        stone.rect.x = 200
+        stone.rect.y = 200
+        all_sprites.add(stone)
+        dino = Dino(im, 24, 1, 480, 300)
         all_sprites.add(dino)
         running = True
         clock = pygame.time.Clock()
@@ -67,7 +81,7 @@ class Dino(pygame.sprite.Sprite):
 
 if __name__ == '__main__':
     pygame.init()
-    size = width, height = 400, 400
+    size = width, height = 960, 480
     screen = pygame.display.set_mode(size)
     all_sprites = pygame.sprite.Group()
     hub = Hub(screen)
