@@ -12,12 +12,14 @@ class Hub():
         back.rect.x = 0
         back.rect.y = 0
         all_sprites.add(back)
-        stone = pygame.sprite.Sprite()
-        stone.image = image
-        stone.rect = stone.image.get_rect()
-        stone.rect.x = 200
-        stone.rect.y = 200
-        all_sprites.add(stone)
+        coords = [(40, 200), (200, 300), (800, 200)]
+        for i in range(3):
+            stone = pygame.sprite.Sprite()
+            stone.image = image
+            stone.rect = stone.image.get_rect()
+            stone.rect.x = coords[i][0]
+            stone.rect.y = coords[i][1]
+            all_sprites.add(stone)
         dino = Dino(im, 24, 1, 480, 300)
         all_sprites.add(dino)
         running = True
@@ -58,16 +60,21 @@ class Dino(pygame.sprite.Sprite):
     def update(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         keys = pygame.key.get_pressed()
+        idle = True
         if keys[pygame.K_a]:
             self.move(-20, 0)
             self.face = 'left'
+            idle = False
         elif keys[pygame.K_d]:
             self.move(20, 0)
             self.face = 'right'
+            idle = False
         if keys[pygame.K_w]:
             self.move(0, -20)
+            idle = False
         elif keys[pygame.K_s]:
             self.move(0, 20)
+            idle = False
         self.clock.tick(60)
         if self.face == 'left':
             self.image = self.framesLeft[self.cur_frame]
