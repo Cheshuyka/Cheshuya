@@ -17,17 +17,15 @@ class Hub():
         dinoImage = pygame.image.load("Cheshuya/Sprites/DinoSprites - mort.png")
         stoneImage = pygame.image.load("Cheshuya/Sprites/stone.png")
         coords = [(40, 200), (200, 300), (800, 200)]
-        for i in range(3):
-            stone = pygame.sprite.Sprite()
-            stone.image = stoneImage
-            stone.rect = stone.image.get_rect()
-            stone.rect.x = coords[i][0]
-            stone.rect.y = coords[i][1]
-            all_sprites.add(stone)
         dino = Dino(dinoImage, 24, 1, 480, 300)
         all_sprites.add(dino)
         all_sprites.update()
+        for i in range(3):
+            stone = Stone(coords[i][0], coords[i][1], i + 1, dino)
+            stone_sprites.add(stone)
+        stone_sprites.update()
         all_sprites.draw(screen)
+        stone_sprites.draw(screen)
         screen2 = screen.copy()
         for a in range(300, 0, -1):
             screen1 = screen2.copy()
@@ -44,6 +42,10 @@ class Hub():
             screen.fill((0, 0, 0))
             all_sprites.draw(screen)
             all_sprites.update()
+            stone_sprites.draw(screen)
+            stone_sprites.update()
+            brokenStones.draw(screen)
+            brokenStones.update()
             pygame.display.flip()
             clock.tick(10)
         pygame.quit()
@@ -136,6 +138,8 @@ class Dino(pygame.sprite.Sprite):
         elif keys[pygame.K_s]:
             self.move(0, 20)
             idle = False
+        if keys[pygame.K_RETURN]:
+            print(self.checkCollide())
         self.clock.tick(60)
         if self.face == 'left':
             self.image = self.framesLeft[self.cur_frame]
@@ -146,11 +150,61 @@ class Dino(pygame.sprite.Sprite):
     def move(self, x, y):
         self.rect = self.rect.move(x, y)
 
+    def checkCollide(self):
+        for sprite in stone_sprites:
+            a = pygame.sprite.collide_mask(self, sprite)
+            if a:
+                stone_sprites.remove(sprite)
+                brokenStone = BrokenStone(sprite.x, sprite.y + 40)
+                brokenStones.add(brokenStone)
+                return sprite.level
+        return False
+
+
+class Stone(pygame.sprite.Sprite):  # камень с рунами
+    def __init__(self, x, y, level, dino):
+        super().__init__(stone_sprites)
+        self.image = pygame.image.load("Cheshuya/Sprites/stone.png")
+        self.x, self.y = x, y
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(x, y)
+        self.level = level
+        self.dino = dino
+
+    def update(self):
+        enter_sprites.empty()
+        a = pygame.sprite.collide_mask(self, self.dino)
+        if a:
+            enter = pygame.sprite.Sprite()
+            enter.image = pygame.image.load("Cheshuya/Sprites/enter.png")
+            enter.rect = enter.image.get_rect()
+            enter.rect.x = self.x - 15
+            enter.rect.y = self.y - 50
+            enter_sprites.add(enter)
+            enter_sprites.update()
+            enter_sprites.draw(screen)
+
+
+class BrokenStone(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(brokenStones)
+        self.image = pygame.image.load("Cheshuya/Sprites/BrokenStone.png")
+        self.x, self.y = x, y
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(x, y)
+
+
+class Level():  # уровень
+    pass
+
 
 if __name__ == '__main__':
     pygame.init()
     size = width, height = 960, 480
     screen = pygame.display.set_mode(size)
     all_sprites = pygame.sprite.Group()
+    stone_sprites = pygame.sprite.Group()
+    brokenStones = pygame.sprite.Group()
+    enter_sprites = pygame.sprite.Group()
     pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
     hub = Hub(screen)
