@@ -2,7 +2,7 @@ import pygame
 
 
 class Hub():
-    def __init__(self, screen):
+    def __init__(self):
         self.startScreen()
         fade = pygame.Surface((960, 480))
         fade.fill((0, 0, 0))
@@ -207,4 +207,4 @@ if __name__ == '__main__':
     brokenStones = pygame.sprite.Group()
     enter_sprites = pygame.sprite.Group()
     pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
-    hub = Hub(screen)
+    hub = Hub()
