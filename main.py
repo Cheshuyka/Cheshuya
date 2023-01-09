@@ -1,5 +1,6 @@
 import pygame
 import sqlite3
+ZOOMconst = 3
 
 
 class Hub():
@@ -55,6 +56,7 @@ class Hub():
             brokenStones.draw(screen)
             brokenStones.update()
             pygame.display.flip()
+            print(brokenStones)
             clock.tick(10)
         pygame.quit()
 
@@ -141,7 +143,8 @@ class Dino(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         idle = True
         if keys[pygame.K_RETURN]:
-            print(self.checkCollide())
+            level = Level(self.checkCollide())
+            screen = pygame.display.set_mode((960, 480))
         if keys[pygame.K_a]:
             self.move(-20, 0)
             self.face = 'left'
@@ -233,7 +236,75 @@ class BrokenStone(pygame.sprite.Sprite):
 
 
 class Level():  # уровень
-    pass
+    def __init__(self, num):
+        fileName = 'Level' + str(num)
+        screen = pygame.display.set_mode((900, 800))
+        background = pygame.image.load("Cheshuya/Levels/level1.jpeg")
+        back = pygame.sprite.Sprite()
+        back.image = background
+        back.rect = back.image.get_rect()
+        back.rect.x = 0
+        back.rect.y = 0
+        arrow = pygame.sprite.Sprite()
+        arrow.image = pygame.image.load('Cheshuya/Sprites/arrow.png')
+        arrow.rect = arrow.image.get_rect()
+        level = pygame.sprite.Group()
+        level.add(back)
+        level.add(arrow)
+        clock = pygame.time.Clock()
+        counter, text = 100, '100'.rjust(3)
+        pygame.time.set_timer(pygame.USEREVENT, 1000)
+        font = pygame.font.SysFont('Consolas', 100)
+        running = True
+        zoom1 = False
+        xMouse = 0
+        yMouse = 0
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.USEREVENT:
+                    counter -= 1
+                    text = str(counter).rjust(3) if counter > 0 else 'boom!'
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 3:
+                        if zoom1:
+                            zoom1 = False
+                        else:
+                            zoom1 = True
+            if pygame.mouse.get_focused():
+                x, y = pygame.mouse.get_pos()
+                arrow.rect.x = x
+                arrow.rect.y = y
+            screen.fill((0, 0, 0))
+            level.draw(screen)
+            level.update()
+            screen.blit(font.render(text, True, (255, 255, 255)), (700, 600))
+            if zoom1 and xMouse != 0 and yMouse != 0:
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_a]:
+                    xMouse -= 5
+                elif keys[pygame.K_d]:
+                    xMouse += 5
+                elif keys[pygame.K_w]:
+                    yMouse -= 5
+                elif keys[pygame.K_s]:
+                    yMouse += 5
+            if zoom1:
+                zoom = ZOOMconst
+                width, height = screen.get_size()
+                zoom_size = (round(width / zoom), round(height / zoom))
+                zoom_area = pygame.Rect(0, 0, zoom_size[0], zoom_size[1])
+                if xMouse == yMouse == 0:
+                    xMouse, yMouse = pygame.mouse.get_pos()
+                zoom_area.center = (xMouse, yMouse)
+                zoom_surf = pygame.Surface(zoom_area.size)
+                zoom_surf.blit(screen, (0, 0), zoom_area)
+                zoom_surf = pygame.transform.smoothscale(zoom_surf, (width, height))
+                screen.blit(zoom_surf, (0, 0))
+            else:
+                xMouse = 0
+                yMouse = 0
+            pygame.display.flip()
+            clock.tick(60)
 
 
 if __name__ == '__main__':
@@ -244,5 +315,6 @@ if __name__ == '__main__':
     stone_sprites = pygame.sprite.Group()
     brokenStones = pygame.sprite.Group()
     enter_sprites = pygame.sprite.Group()
+    level = pygame.sprite.Group()
     pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
     hub = Hub()
