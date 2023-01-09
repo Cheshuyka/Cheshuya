@@ -1,4 +1,5 @@
 import pygame
+import sqlite3
 
 
 class Hub():
@@ -14,6 +15,13 @@ class Hub():
         back.rect.x = 0
         back.rect.y = 0
         all_sprites.add(back)
+        shopImage = pygame.image.load("Cheshuya/Sprites/Shop.png")
+        shop = pygame.sprite.Sprite()
+        shop.image = shopImage
+        shop.rect = shop.image.get_rect()
+        shop.rect.x = 650
+        shop.rect.y = 250
+        all_sprites.add(shop)
         dinoImage = pygame.image.load("Cheshuya/Sprites/DinoSprites - mort.png")
         stoneImage = pygame.image.load("Cheshuya/Sprites/stone.png")
         coords = [(40, 200), (200, 300), (800, 200)]
@@ -103,27 +111,37 @@ class Dino(pygame.sprite.Sprite):
     def __init__(self, sheet, columns, rows, x, y):
         super().__init__(all_sprites)
         self.clock = pygame.time.Clock()
-        self.frames = []
-        self.framesLeft = []
+        self.framesRun = []
+        self.framesRunLeft = []
+        self.framesIdle = []
+        self.framesIdleLeft = []
         self.cut_sheet(sheet, columns, rows)
         self.cur_frame = 0
-        self.image = self.frames[self.cur_frame]
+        self.image = self.framesIdle[self.cur_frame]
         self.rect = self.rect.move(x, y)
         self.face = 'right'
+        self.last = 'idle'
 
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
-                frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
-        for image in self.frames:
-            self.framesLeft.append(pygame.transform.flip(image, True, False))
+                if i <= 3:
+                    frame_location = (self.rect.w * i, self.rect.h * j)
+                    self.framesIdle.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+                elif i <= 9:
+                    frame_location = (self.rect.w * i, self.rect.h * j)
+                    self.framesRun.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
+        for image in self.framesIdle:
+            self.framesIdleLeft.append(pygame.transform.flip(image, True, False))
+        for image in self.framesRun:
+            self.framesRunLeft.append(pygame.transform.flip(image, True, False))
 
     def update(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
         keys = pygame.key.get_pressed()
         idle = True
+        if keys[pygame.K_RETURN]:
+            print(self.checkCollide())
         if keys[pygame.K_a]:
             self.move(-20, 0)
             self.face = 'left'
@@ -138,13 +156,33 @@ class Dino(pygame.sprite.Sprite):
         elif keys[pygame.K_s]:
             self.move(0, 20)
             idle = False
-        if keys[pygame.K_RETURN]:
-            print(self.checkCollide())
-        self.clock.tick(60)
-        if self.face == 'left':
-            self.image = self.framesLeft[self.cur_frame]
+        if (self.last == 'idle' and idle) or (self.last == 'run' and not(idle)):  # TODO: изменить логику, слишком кринжово
+            if self.last == 'idle':
+                self.cur_frame = (self.cur_frame + 1) % len(self.framesIdle)
+                if self.face == 'left':
+                    self.image = self.framesIdleLeft[self.cur_frame]
+                else:
+                    self.image = self.framesIdle[self.cur_frame]
+            else:
+                self.cur_frame = (self.cur_frame + 1) % len(self.framesRun)
+                if self.face == 'left':
+                    self.image = self.framesRunLeft[self.cur_frame]
+                else:
+                    self.image = self.framesRun[self.cur_frame]
         else:
-            self.image = self.frames[self.cur_frame]
+            self.cur_frame = 0
+            if self.last == 'idle':
+                self.last = 'run'
+                if self.face == 'left':
+                    self.image = self.framesIdleLeft[self.cur_frame]
+                else:
+                    self.image = self.framesIdle[self.cur_frame]
+            else:
+                self.last = 'idle'
+                if self.face == 'left':
+                    self.image = self.framesRunLeft[self.cur_frame]
+                else:
+                    self.image = self.framesRun[self.cur_frame]
         self.image = pygame.transform.scale(self.image, (100, 100))
 
     def move(self, x, y):
