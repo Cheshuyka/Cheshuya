@@ -276,17 +276,16 @@ class Level():  # уровень
         need.rect.x = 0
         need.rect.y = 550
 
+        screen2  = pygame.Surface((900, 800))
+        hit = pygame.sprite.Group()
+        hitImg = pygame.image.load("Cheshuya/Levels/level1.1.png")
+        hitbox = pygame.sprite.Sprite()
+        hitbox.image = hitImg
+        hitbox.rect = (316, 330, 24, 36)
+        hit.add(hitbox)
+
         level = pygame.sprite.Group()
         hearts = pygame.sprite.Group()
-
-        for i in range(3):
-            heartImg = pygame.image.load("Cheshuya/Sprites/Heart.png")
-            heart = pygame.sprite.Sprite()
-            heart.image = heartImg
-            heart.rect = heart.image.get_rect()
-            heart.rect.x = 800
-            heart.rect.y = 100 * i
-            hearts.add(heart)
 
         arrow = pygame.sprite.Sprite()
         arrow.image = pygame.image.load('Cheshuya/Sprites/arrow.png')
@@ -297,10 +296,21 @@ class Level():  # уровень
         clock = pygame.time.Clock()
         if hard == 1:
             counter = 120
+            hearts_count = 3
         elif hard == 2:
             counter = 90
+            hearts_count = 2
         elif hard == 3:
             counter = 60
+            hearts_count = 1
+        for i in range(hearts_count):
+            heartImg = pygame.image.load("Cheshuya/Sprites/Heart.png")
+            heart = pygame.sprite.Sprite()
+            heart.image = heartImg
+            heart.rect = heart.image.get_rect()
+            heart.rect.x = 800
+            heart.rect.y = 100 * i
+            hearts.add(heart)
         text = str(counter)
         pygame.time.set_timer(pygame.USEREVENT, 1000)
         font = pygame.font.SysFont('Consolas', 100)
@@ -323,7 +333,11 @@ class Level():  # уровень
                         else:
                             zoom1 = True
                     elif event.button == 1:
-                        pass
+                        a = pygame.sprite.collide_mask(arrow, hitbox)
+                        if a:
+                            print('ok')
+                        else:
+                            print('no')
             if pygame.mouse.get_focused():
                 x, y = pygame.mouse.get_pos()
                 arrow.rect.x = x
@@ -334,6 +348,9 @@ class Level():  # уровень
             level.draw(screen)
             level.update()
             screen.blit(font.render(text, True, (255, 255, 255)), (700, 600))
+            hit.draw(screen2)
+            screen2.set_alpha(0)
+            screen.blit(screen2, (0, 0))
 
             if zoom1 and xMouse != 0 and yMouse != 0:
                 keys = pygame.key.get_pressed()
@@ -378,6 +395,6 @@ if __name__ == '__main__':
     level = pygame.sprite.Group()
     pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
     pygame.mixer.music.load('Cheshuya/music.wav')
-    pygame.mixer.music.play(-1)
-    pygame.mixer.music.set_volume(0.1)
+    # pygame.mixer.music.play(-1)
+    # pygame.mixer.music.set_volume(0.1)
     hub = Hub()
