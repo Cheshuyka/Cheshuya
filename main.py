@@ -17,16 +17,11 @@ class Hub():
         back.rect.y = 0
         all_sprites.add(back)
         shopImage = pygame.image.load("Cheshuya/Sprites/Shop.png")
-        shop = pygame.sprite.Sprite()
-        shop.image = shopImage
-        shop.rect = shop.image.get_rect()
-        shop.rect.x = 650
-        shop.rect.y = 250
-        all_sprites.add(shop)
         dinoImage = pygame.image.load("Cheshuya/Sprites/DinoSprites - mort.png")
-        stoneImage = pygame.image.load("Cheshuya/Sprites/stone.png")
         coords = [(40, 200), (200, 300), (800, 200)]
         dino = Dino(dinoImage, 24, 1, 480, 300)
+        shop = Shop(650, 250, dino)
+        all_sprites.add(shop)
         all_sprites.add(dino)
         all_sprites.update()
         for i in range(3):
@@ -56,7 +51,6 @@ class Hub():
             brokenStones.draw(screen)
             brokenStones.update()
             pygame.display.flip()
-            print(brokenStones)
             clock.tick(10)
         pygame.quit()
 
@@ -143,8 +137,10 @@ class Dino(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         idle = True
         if keys[pygame.K_RETURN]:
-            level = Level(self.checkCollide())
-            screen = pygame.display.set_mode((960, 480))
+            a = self.checkCollide()
+            if a:
+                level = Level(a)
+                screen = pygame.display.set_mode((960, 480))
         if keys[pygame.K_a]:
             self.move(-20, 0)
             self.face = 'left'
@@ -159,7 +155,7 @@ class Dino(pygame.sprite.Sprite):
         elif keys[pygame.K_s]:
             self.move(0, 20)
             idle = False
-        if (self.last == 'idle' and idle) or (self.last == 'run' and not(idle)):  # TODO: изменить логику, слишком кринжово
+        if (self.last == 'idle' and idle) or (self.last == 'run' and not(idle)):
             if self.last == 'idle':
                 self.cur_frame = (self.cur_frame + 1) % len(self.framesIdle)
                 if self.face == 'left':
@@ -198,28 +194,31 @@ class Dino(pygame.sprite.Sprite):
                 stone_sprites.remove(sprite)
                 brokenStone = BrokenStone(sprite.x, sprite.y + 40)
                 brokenStones.add(brokenStone)
-                return sprite.level
+                return sprite.hard
         return False
 
 
 class Stone(pygame.sprite.Sprite):  # камень с рунами
-    def __init__(self, x, y, level, dino):
+    def __init__(self, x, y, setting, dino):
         super().__init__(stone_sprites)
         self.image = pygame.image.load("Cheshuya/Sprites/stone.png")
         self.x, self.y = x, y
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(x, y)
-        self.level = level
         self.dino = dino
+        self.hard = setting
+        self.settings = {1: ('Cheshuya/Sprites/easy.png', 0),
+                        2: ('Cheshuya/Sprites/medium.png', -20),
+                        3:  ('Cheshuya/Sprites/hard.png', 0)}
 
     def update(self):
         enter_sprites.empty()
         a = pygame.sprite.collide_mask(self, self.dino)
         if a:
             enter = pygame.sprite.Sprite()
-            enter.image = pygame.image.load("Cheshuya/Sprites/enter.png")
+            enter.image = pygame.image.load(self.settings[self.hard][0])
             enter.rect = enter.image.get_rect()
-            enter.rect.x = self.x - 15
+            enter.rect.x = self.x + self.settings[self.hard][1]
             enter.rect.y = self.y - 50
             enter_sprites.add(enter)
             enter_sprites.update()
@@ -235,9 +234,33 @@ class BrokenStone(pygame.sprite.Sprite):
         self.rect = self.rect.move(x, y)
 
 
+class Shop(pygame.sprite.Sprite):
+    def __init__(self, x, y, dino):
+        super().__init__(all_sprites)
+        self.image = pygame.image.load("Cheshuya/Sprites/Shop.png")
+        self.x, self.y = x, y
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(x, y)
+        self.dino = dino
+        self.enter = False
+
+    def update(self):
+        if self.enter:
+            enter_sprites.empty()
+            a = pygame.sprite.collide_mask(self, self.dino)
+            if a:
+                enter = pygame.sprite.Sprite()
+                enter.image = pygame.image.load('Cheshuya/Sprites/enter.png')
+                enter.rect = enter.image.get_rect()
+                enter.rect.x = self.x
+                enter.rect.y = self.y - 50
+                enter_sprites.add(enter)
+                enter_sprites.update()
+                enter_sprites.draw(screen)
+
+
 class Level():  # уровень
-    def __init__(self, num):
-        fileName = 'Level' + str(num)
+    def __init__(self, hard):
         screen = pygame.display.set_mode((900, 800))
         background = pygame.image.load("Cheshuya/Levels/level1.jpeg")
         back = pygame.sprite.Sprite()
@@ -245,14 +268,40 @@ class Level():  # уровень
         back.rect = back.image.get_rect()
         back.rect.x = 0
         back.rect.y = 0
+
+        needImg = pygame.image.load("Cheshuya/Levels/level1.1.png")
+        need = pygame.sprite.Sprite()
+        need.image = needImg
+        need.rect = need.image.get_rect()
+        need.rect.x = 0
+        need.rect.y = 550
+
+        level = pygame.sprite.Group()
+        hearts = pygame.sprite.Group()
+
+        for i in range(3):
+            heartImg = pygame.image.load("Cheshuya/Sprites/Heart.png")
+            heart = pygame.sprite.Sprite()
+            heart.image = heartImg
+            heart.rect = heart.image.get_rect()
+            heart.rect.x = 800
+            heart.rect.y = 100 * i
+            hearts.add(heart)
+
         arrow = pygame.sprite.Sprite()
         arrow.image = pygame.image.load('Cheshuya/Sprites/arrow.png')
         arrow.rect = arrow.image.get_rect()
-        level = pygame.sprite.Group()
         level.add(back)
+        level.add(need)
         level.add(arrow)
         clock = pygame.time.Clock()
-        counter, text = 100, '100'.rjust(3)
+        if hard == 1:
+            counter = 120
+        elif hard == 2:
+            counter = 90
+        elif hard == 3:
+            counter = 60
+        text = str(counter)
         pygame.time.set_timer(pygame.USEREVENT, 1000)
         font = pygame.font.SysFont('Consolas', 100)
         running = True
@@ -263,21 +312,29 @@ class Level():  # уровень
             for event in pygame.event.get():
                 if event.type == pygame.USEREVENT:
                     counter -= 1
-                    text = str(counter).rjust(3) if counter > 0 else 'boom!'
+                    if counter > 0:
+                        text = str(counter)
+                    else:
+                        self.lose()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 3:
                         if zoom1:
                             zoom1 = False
                         else:
                             zoom1 = True
+                    elif event.button == 1:
+                        pass
             if pygame.mouse.get_focused():
                 x, y = pygame.mouse.get_pos()
                 arrow.rect.x = x
                 arrow.rect.y = y
             screen.fill((0, 0, 0))
+            hearts.draw(screen)
+            hearts.update()
             level.draw(screen)
             level.update()
             screen.blit(font.render(text, True, (255, 255, 255)), (700, 600))
+
             if zoom1 and xMouse != 0 and yMouse != 0:
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_a]:
@@ -306,6 +363,9 @@ class Level():  # уровень
             pygame.display.flip()
             clock.tick(60)
 
+    def lose(self):
+        pass
+
 
 if __name__ == '__main__':
     pygame.init()
@@ -317,4 +377,7 @@ if __name__ == '__main__':
     enter_sprites = pygame.sprite.Group()
     level = pygame.sprite.Group()
     pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
+    pygame.mixer.music.load('Cheshuya/music.wav')
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.1)
     hub = Hub()
