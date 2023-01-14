@@ -285,7 +285,8 @@ class Level():  # уровень
         hit.add(hitbox)
 
         level = pygame.sprite.Group()
-        hearts = pygame.sprite.Group()
+        hearts_sprites = pygame.sprite.Group()
+        hearts = []
 
         arrow = pygame.sprite.Sprite()
         arrow.image = pygame.image.load('Cheshuya/Sprites/arrow.png')
@@ -310,7 +311,8 @@ class Level():  # уровень
             heart.rect = heart.image.get_rect()
             heart.rect.x = 800
             heart.rect.y = 100 * i
-            hearts.add(heart)
+            hearts_sprites.add(heart)
+            hearts.append(heart)
         text = str(counter)
         pygame.time.set_timer(pygame.USEREVENT, 1000)
         font = pygame.font.SysFont('Consolas', 100)
@@ -318,6 +320,7 @@ class Level():  # уровень
         zoom1 = False
         xMouse = 0
         yMouse = 0
+        res = False
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.USEREVENT:
@@ -325,7 +328,7 @@ class Level():  # уровень
                     if counter > 0:
                         text = str(counter)
                     else:
-                        self.lose()
+                        res = 'lose'
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 3:
                         if zoom1:
@@ -337,14 +340,19 @@ class Level():  # уровень
                         if a:
                             print('ok')
                         else:
-                            print('no')
+                            hearts_sprites.remove(hearts[-1])
+                            del hearts[-1]
+                            if len(hearts) == 0:
+                                res = 'lose'
+            if res:
+                break
             if pygame.mouse.get_focused():
                 x, y = pygame.mouse.get_pos()
                 arrow.rect.x = x
                 arrow.rect.y = y
             screen.fill((0, 0, 0))
-            hearts.draw(screen)
-            hearts.update()
+            hearts_sprites.draw(screen)
+            hearts_sprites.update()
             level.draw(screen)
             level.update()
             screen.blit(font.render(text, True, (255, 255, 255)), (700, 600))
