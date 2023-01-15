@@ -1,6 +1,8 @@
 import pygame
 import sqlite3
+import random
 ZOOMconst = 3
+condition = True
 
 
 class Hub():
@@ -150,8 +152,6 @@ class Hub():
         pygame.time.delay(5)
         screen.fill((0, 0, 0))
         all_sprites.remove(back)
-
-
 
 
 class Dino(pygame.sprite.Sprite):
@@ -390,6 +390,7 @@ class Level():  # уровень
                         a = pygame.sprite.collide_mask(arrow, hitbox)
                         if a:
                             print('ok')
+
                         else:
                             hearts_sprites.remove(hearts[-1])
                             del hearts[-1]
@@ -443,6 +444,53 @@ class Level():  # уровень
         pass
 
 
+screen_rect = (0, 0, 960, 480)
+
+
+class Particle(pygame.sprite.Sprite):
+    # сгенерируем частицы разного размера
+    if condition:
+        fire = [pygame.load.image("Galka.png")]
+    else:
+        fire = [pygame.load.image("krest.png")]
+
+    for scale in (5, 10, 20):
+        fire.append(pygame.transform.scale(fire[0], (scale, scale)))
+
+    def __init__(self, pos, dx=random.choice(range(-6, 5)), dy=random.choice(range(-6, 5))):
+        super().__init__(all_sprites)
+        self.image = random.choice(self.fire)
+        self.rect = self.image.get_rect()
+        GRAVITY = 5
+
+        # у каждой частицы своя скорость — это вектор
+        self.velocity = [dx, dy]
+        # и свои координаты
+        self.rect.x, self.rect.y = pos
+
+        # гравитация будет одинаковой (значение константы)
+        self.gravity = GRAVITY
+
+    def update(self):
+        # применяем гравитационный эффект:
+        # движение с ускорением под действием гравитации
+        self.velocity[1] += self.gravity
+        # перемещаем частицу
+        self.rect.x += self.velocity[0]
+        self.rect.y += self.velocity[1]
+        # убиваем, если частица ушла за экран
+        if not self.rect.colliderect(screen_rect):
+            self.kill()
+
+    def create_particles(position):
+        # количество создаваемых частиц
+        particle_count = 20
+        # возможные скорости
+        numbers = range(-5, 6)
+        for _ in range(particle_count):
+            Particle(position, random.choice(numbers), random.choice(numbers))
+
+
 if __name__ == '__main__':
     pygame.init()
     size = width, height = 960, 480
@@ -457,5 +505,3 @@ if __name__ == '__main__':
     # pygame.mixer.music.play(-1)
     # pygame.mixer.music.set_volume(0.1)
     hub = Hub()
-
-
