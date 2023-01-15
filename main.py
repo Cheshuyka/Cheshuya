@@ -66,7 +66,7 @@ class Hub():  # экран для выбора сложности новой м�
             pygame.display.flip()
             clock.tick(10)
         if just_quit:
-            sys.exit()
+            sys.exit()  # выход без фин. экрана
         self.endScreen()
 
     def startScreen(self):  # начальный экран
@@ -92,7 +92,7 @@ class Hub():  # экран для выбора сложности новой м�
         all_sprites.add(space)
         all_sprites.add(start)
         running = True
-        while running:
+        while running:  # ждем нажатия на пробел
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
@@ -115,39 +115,39 @@ class Hub():  # экран для выбора сложности новой м�
         all_sprites.remove(back)
         all_sprites.remove(start)
 
-    def endScreen(self):
+    def endScreen(self):  # конец игры
         self.end.enter = False
         font = pygame.font.SysFont('Consolas', 32)
         con = sqlite3.connect("Cheshuya/PlayersData.db")
         cur = con.cursor()
-        a = cur.execute('''SELECT score FROM Player''').fetchone()
-        des = font.render(f"Your score {a[0]}", 1, (0, 254, 255))
+        a = cur.execute('''SELECT score FROM Player''').fetchone()  # получаем счет
+        des = font.render(f"Your score {a[0]}", 1, (0, 254, 255))  # счет для рисования на экране
         backgroundFirst = pygame.image.load("Cheshuya/Sprites/cave.jpg")
         back = pygame.sprite.Sprite()
         back.image = backgroundFirst
         back.rect = back.image.get_rect()
         back.rect.x = 0
         back.rect.y = 0
-        all_sprites.add(back)
+        all_sprites.add(back)  # фон
         thankyou = pygame.image.load("Cheshuya/Sprites/thanks.png")
         thank = pygame.sprite.Sprite()
         thank.image = thankyou
         thank.rect = back.image.get_rect()
         thank.rect.x = 250
-        thank.rect.y = 100
+        thank.rect.y = 100  # "спасибо за внимание"
         cr = pygame.image.load("Cheshuya/Sprites/Creators.png")
         creators = pygame.sprite.Sprite()
         creators.image = cr
         creators.rect = back.image.get_rect()
         creators.rect.x = 250
-        creators.rect.y = 500
+        creators.rect.y = 500  # создатели
         x = 250
         y = 700
         all_sprites.add(creators)
         all_sprites.add(thank)
         running = True
         clock = pygame.time.Clock()
-        while running:
+        while running:  # прокрутка титров
             if creators.rect.y != 100:
                 creators.rect = creators.rect.move(0, -1)
             x += 10
@@ -165,7 +165,7 @@ class Hub():  # экран для выбора сложности новой м�
         screen2 = screen.copy()
         fade = pygame.Surface((960, 480))
         fade.fill((0, 0, 0))
-        for a in range(0, 300):
+        for a in range(0, 300):  # затемнение
             screen1 = screen2.copy()
             fade.set_alpha(a)
             screen1.blit(fade, (0, 0))
@@ -175,21 +175,19 @@ class Hub():  # экран для выбора сложности новой м�
         screen.fill((0, 0, 0))
         all_sprites.remove(back)
         run = True
-        while run:
+        while run:  # показываем счет до нажатия на пробел
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         run = False
             screen.blit(des, (370, 200))
             pygame.display.update()
-
         cur.execute("""UPDATE Player
                         SET current = 1""")
         cur.execute("""UPDATE Player
                         SET score = 0""")
-        con.commit()
-        pygame.quit()
-        sys.exit()
+        con.commit()  # подготовка БД для следующей игры
+        sys.exit()  # выход из игры
 
     def nowhereToEnter(self):  # удаление всех камней и возможность завершить игру
         self.end.enter = True  #
@@ -215,7 +213,7 @@ class Dino(pygame.sprite.Sprite):  # миленький динозаврик
         self.last = 'idle'
         self.hub = hub
 
-    def cut_sheet(self, sheet, columns, rows):  # нарезание спрайтов
+    def cut_sheet(self, sheet, columns, rows):  # нарезка спрайтов
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
@@ -236,12 +234,12 @@ class Dino(pygame.sprite.Sprite):  # миленький динозаврик
         if keys[pygame.K_RETURN]:
             a = self.checkCollide()  # проверка коллизий
             if a == 'end_game':
-                self.hub.endScreen()
+                self.hub.endScreen()  # конец игры
             if a:
-                level = Level(a)
+                level = Level(a)  # уровень
                 level_sprites.empty()
                 screen = pygame.display.set_mode((960, 480))
-                if level.end:
+                if level.end:  # делаем доступным конец игры
                     self.hub.nowhereToEnter()
         if keys[pygame.K_a]:
             self.move(-20, 0)
@@ -257,6 +255,8 @@ class Dino(pygame.sprite.Sprite):  # миленький динозаврик
         elif keys[pygame.K_s]:
             self.move(0, 20)
             idle = False
+        # движение динозаврика выше
+        # ниже находится выбор спрайта при беге/спокойствии
         if (self.last == 'idle' and idle) or (self.last == 'run' and not(idle)):
             if self.last == 'idle':
                 self.cur_frame = (self.cur_frame + 1) % len(self.framesIdle)
@@ -284,7 +284,7 @@ class Dino(pygame.sprite.Sprite):  # миленький динозаврик
                     self.image = self.framesRunLeft[self.cur_frame]
                 else:
                     self.image = self.framesRun[self.cur_frame]
-        self.image = pygame.transform.scale(self.image, (100, 100))
+        self.image = pygame.transform.scale(self.image, (100, 100))  # изменение размера изображения
 
     def move(self, x, y):  # движение
         self.rect = self.rect.move(x, y)
@@ -364,35 +364,35 @@ class EndGame(pygame.sprite.Sprite):  # статуя конца игры
 class Level():  # уровень
     def __init__(self, hard):
         self.end = False
-        current = 0
+        current = 0  # номер элемента, который нужно найти
         screen = pygame.display.set_mode((900, 800))
         con = sqlite3.connect("Cheshuya/PlayersData.db")
         cur = con.cursor()
         result = cur.execute(f"""SELECT * FROM Player""").fetchall()
         con.close()
-        level, score = result[0][1], result[0][0]
+        level, score = result[0][1], result[0][0]  # текущий уровень и счет
         background = pygame.image.load(f"Cheshuya/Levels/level{level}.jpg")
         back = pygame.sprite.Sprite()
         back.image = background
         back.rect = back.image.get_rect()
         back.rect.x = 0
-        back.rect.y = 0
+        back.rect.y = 0  # основная картинка
         need_images = []
         for i in range(1, 6):
-            need_images.append(f"Cheshuya/Levels/level{level}.{i}.png")
+            need_images.append(f"Cheshuya/Levels/level{level}.{i}.png")  # нужные элементы
         f = open(f'Cheshuya/Levels/hitboxes{level}.txt', mode='rt', encoding='utf-8')
-        hitboxes = eval(f.readlines()[0])
+        hitboxes = eval(f.readlines()[0])  # координаты элементов
         f.close()
         need = pygame.sprite.Sprite()
         need.image = pygame.image.load(need_images[0])
         need.rect = need.image.get_rect()
         need.rect.x = 0
-        need.rect.y = 550
+        need.rect.y = 550  # спрайт нужного элемента
         screen2  = pygame.Surface((900, 800))
         hit = pygame.sprite.Group()
         hitbox = pygame.sprite.Sprite()
         hitbox.image = pygame.image.load(need_images[0])
-        hitbox.rect = hitboxes[0]
+        hitbox.rect = hitboxes[0]  # хитбоксы
         hit.add(hitbox)
         hearts_sprites = pygame.sprite.Group()
         hearts = []
@@ -403,7 +403,7 @@ class Level():  # уровень
         level_sprites.add(need)
         level_sprites.add(arrow)
         clock = pygame.time.Clock()
-        if hard == 1:
+        if hard == 1:  # количество сердец и секунд, в зависимости от уровня сложности
             counter = 120
             hearts_count = 3
         elif hard == 2:
@@ -412,7 +412,7 @@ class Level():  # уровень
         elif hard == 3:
             counter = 60
             hearts_count = 1
-        for i in range(hearts_count):
+        for i in range(hearts_count):  # добавляем сердца
             heartImg = pygame.image.load("Cheshuya/Sprites/Heart.png")
             heart = pygame.sprite.Sprite()
             heart.image = heartImg
@@ -429,11 +429,11 @@ class Level():  # уровень
         xMouse = 0
         yMouse = 0
         res = False
-        while running:
+        while running:  # основной цикл
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
-                if event.type == pygame.USEREVENT:
+                if event.type == pygame.USEREVENT:  # уменьшение секунд на таймере
                     counter -= 1
                     if counter > 0:
                         text = str(counter)
@@ -441,14 +441,14 @@ class Level():  # уровень
                         res = 'lose'
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 3:
-                        if zoom1:
+                        if zoom1:  # отменить зум
                             zoom1 = False
-                        else:
+                        else:  # подтвердить зум
                             zoom1 = True
-                    elif event.button == 1:
+                    elif event.button == 1:  # ответ
                         x, y = arrow.rect.x, arrow.rect.y
                         a = pygame.sprite.collide_mask(arrow, hitbox)
-                        if a:
+                        if a:  # верное нажатие
                             good.play()
                             create_particles((x, y), True)
                             current += 1
@@ -458,7 +458,7 @@ class Level():  # уровень
                                 need.image = pygame.image.load(need_images[current])
                                 hitbox.image = pygame.image.load(need_images[current])
                                 hitbox.rect = hitboxes[current]
-                        else:
+                        else:  # неверное
                             bad.play()
                             create_particles((x, y), False)
                             hearts_sprites.remove(hearts[-1])
@@ -470,7 +470,7 @@ class Level():  # уровень
             if pygame.mouse.get_focused():
                 x, y = pygame.mouse.get_pos()
                 arrow.rect.x = x
-                arrow.rect.y = y
+                arrow.rect.y = y  # спрайт стрелки
             screen.fill((0, 0, 0))
             hearts_sprites.draw(screen)
             hearts_sprites.update()
@@ -480,7 +480,7 @@ class Level():  # уровень
             hit.draw(screen2)
             screen2.set_alpha(0)
             screen.blit(screen2, (0, 0))
-            if zoom1 and xMouse != 0 and yMouse != 0:
+            if zoom1 and xMouse != 0 and yMouse != 0:  # возможность двигать камеру в зуме (WASD)
                 keys = pygame.key.get_pressed()
                 if keys[pygame.K_a]:
                     xMouse -= 5
@@ -490,7 +490,7 @@ class Level():  # уровень
                     yMouse -= 5
                 elif keys[pygame.K_s]:
                     yMouse += 5
-            if zoom1:
+            if zoom1:  # зум
                 zoom = ZOOMconst
                 width, height = screen.get_size()
                 zoom_size = (round(width / zoom), round(height / zoom))
@@ -507,31 +507,27 @@ class Level():  # уровень
                 yMouse = 0
             pygame.display.flip()
             clock.tick(60)
-        con = sqlite3.connect("Cheshuya/PlayersData.db")
-        cur = con.cursor()
-        if res == 'win':
+        if res == 'win':  # победа
             plusScore = hard * 10
+            con = sqlite3.connect("Cheshuya/PlayersData.db")
+            cur = con.cursor()
             cur.execute(f"""UPDATE Player
                             SET current = current + 1""")
             cur.execute(f"""UPDATE Player
                             SET score = score + {plusScore}""")
+            con.commit()
+            con.close()
             if level == 3:
                 self.end = True
-        else:
-            plusScore = hard * 15
-            cur.execute(f"""UPDATE Player
-                            SET score = score - {plusScore}""")
-        con.commit()
-        con.close()
 
 
-class Particle(pygame.sprite.Sprite):
+class Particle(pygame.sprite.Sprite):  # партиклы
     def __init__(self, pos, condition, dx=random.choice(range(-6, 5)), dy=random.choice(range(-6, 5))):
         super().__init__(level_sprites)
         if condition:
-            self.fire = [pygame.image.load("Cheshuya/Sprites/Galka.png")]
+            self.fire = [pygame.image.load("Cheshuya/Sprites/Galka.png")]  # галочки
         else:
-            self.fire = [pygame.image.load("Cheshuya/Sprites/krest.png")]
+            self.fire = [pygame.image.load("Cheshuya/Sprites/krest.png")]  # крестики
         for scale in (5, 10, 20):
             self.fire.append(pygame.transform.scale(self.fire[0], (scale, scale)))
         self.image = random.choice(self.fire)
@@ -548,7 +544,7 @@ class Particle(pygame.sprite.Sprite):
             self.kill()
 
 
-def create_particles(position, condition):
+def create_particles(position, condition):  # создание партиклов
     particle_count = 20
     numbers = range(-5, 6)
     for i in range(particle_count):
@@ -564,10 +560,10 @@ if __name__ == '__main__':
     brokenStones = pygame.sprite.Group()
     enter_sprites = pygame.sprite.Group()
     level_sprites = pygame.sprite.Group()
-    pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
+    pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))   # прячем курсор
     pygame.mixer.music.load('Cheshuya/music.wav')
-    pygame.mixer.music.play(-1)
+    pygame.mixer.music.play(-1)  # музыка
     pygame.mixer.music.set_volume(0.1)
-    good = pygame.mixer.Sound('Cheshuya/good.mp3')
-    bad = pygame.mixer.Sound('Cheshuya/bad.mp3')
-    hub = Hub()
+    good = pygame.mixer.Sound('Cheshuya/good.mp3')  # звук правильного нажатия
+    bad = pygame.mixer.Sound('Cheshuya/bad.mp3')  # звук неправильного нажатия
+    hub = Hub()  # начало игры (хаб)
