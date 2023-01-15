@@ -450,9 +450,9 @@ screen_rect = (0, 0, 960, 480)
 class Particle(pygame.sprite.Sprite):
     # сгенерируем частицы разного размера
     if condition:
-        fire = [pygame.load.image("Galka.png")]
+        fire = [pygame.image.load("Galka.png")]
     else:
-        fire = [pygame.load.image("krest.png")]
+        fire = [pygame.image.load("krest.png")]
 
     for scale in (5, 10, 20):
         fire.append(pygame.transform.scale(fire[0], (scale, scale)))
