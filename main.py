@@ -113,6 +113,7 @@ class Hub():
         all_sprites.remove(start)
 
     def endScreen(self):
+        self.end.enter = False
         con = sqlite3.connect("Cheshuya/PlayersData.db")
         cur = con.cursor()
         cur.execute("""UPDATE Player
@@ -144,7 +145,7 @@ class Hub():
         running = True
         clock = pygame.time.Clock()
         while running:
-            if not creators.rect.y != 100:
+            if creators.rect.y != 100:
                 creators.rect = creators.rect.move(0, -1)
             thank.rect = thank.rect.move(0, -1)
             clock.tick(50)
@@ -426,6 +427,7 @@ class Level():  # уровень
                         x, y = arrow.rect.x, arrow.rect.y
                         a = pygame.sprite.collide_mask(arrow, hitbox)
                         if a:
+                            good.play()
                             create_particles((x, y), True)
                             current += 1
                             if current == len(need_images):
@@ -435,6 +437,7 @@ class Level():  # уровень
                                 hitbox.image = pygame.image.load(need_images[current])
                                 hitbox.rect = hitboxes[current]
                         else:
+                            bad.play()
                             create_particles((x, y), False)
                             hearts_sprites.remove(hearts[-1])
                             del hearts[-1]
@@ -541,6 +544,8 @@ if __name__ == '__main__':
     level_sprites = pygame.sprite.Group()
     pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (0, 0, 0, 0, 0, 0, 0, 0))
     pygame.mixer.music.load('Cheshuya/music.wav')
-    # pygame.mixer.music.play(-1)
-    # pygame.mixer.music.set_volume(0.1)
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.1)
+    good = pygame.mixer.Sound('Cheshuya/good.mp3')
+    bad = pygame.mixer.Sound('Cheshuya/bad.mp3')
     hub = Hub()
