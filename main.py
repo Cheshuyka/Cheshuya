@@ -2,13 +2,13 @@ import pygame
 import sqlite3
 import random
 import sys
-ZOOMconst = 3
-screen_rect = (0, 0, 900, 800)
+ZOOMconst = 3  # константа для приближения экрана в мини-игре
+screen_rect = (0, 0, 900, 800)  # константа размера экрана для партиклов
 
 
-class Hub():
+class Hub():  # экран для выбора сложности новой мини-игры
     def __init__(self):
-        self.startScreen()
+        self.startScreen()  # вызываем начальный экран
         fade = pygame.Surface((960, 480))
         fade.fill((0, 0, 0))
         clock = pygame.time.Clock()
@@ -18,31 +18,31 @@ class Hub():
         back.rect = back.image.get_rect()
         back.rect.x = 0
         back.rect.y = 0
-        all_sprites.add(back)
+        all_sprites.add(back)  # фон
         dinoImage = pygame.image.load("Cheshuya/Sprites/DinoSprites - mort.png")
-        coords = [(40, 200), (200, 300), (800, 200)]
-        dino = Dino(dinoImage, 24, 1, 480, 300, self)
+        coords = [(40, 200), (200, 300), (800, 200)]  # координаты камней
+        dino = Dino(dinoImage, 24, 1, 480, 300, self)  # динозаврик
         self.end = EndGame(650, 250, dino)
-        all_sprites.add(self.end)
+        all_sprites.add(self.end)  # статуя конца игры
         all_sprites.add(dino)
         all_sprites.update()
         con = sqlite3.connect("Cheshuya/PlayersData.db")
         cur = con.cursor()
-        level = cur.execute(f"""SELECT current FROM Player""").fetchall()[0][0]
+        level = cur.execute(f"""SELECT current FROM Player""").fetchall()[0][0]  # текущий уровень
         con.close()
-        if level < 4:
-            for i in range(3):
+        if level < 4:  # еще не конец игры
+            for i in range(3):  # добавляем камни
                 stone = Stone(coords[i][0], coords[i][1], i + 1, dino)
                 stone_sprites.add(stone)
         else:
-            for i in range(3):
+            for i in range(3):  # добавляем сломанные камни
                 stone = BrokenStone(coords[i][0], coords[i][1] + 40)
                 brokenStones.add(stone)
         stone_sprites.update()
         all_sprites.draw(screen)
         stone_sprites.draw(screen)
         screen2 = screen.copy()
-        for a in range(300, 0, -1):
+        for a in range(300, 0, -1):  # выходим из затемнения
             screen1 = screen2.copy()
             fade.set_alpha(a)
             screen1.blit(fade, (0, 0))
@@ -50,9 +50,11 @@ class Hub():
             pygame.display.update()
             pygame.time.delay(5)
         running = True
-        while running:
+        just_quit = False
+        while running:  # основной цикл
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    just_quit = True
                     running = False
             screen.fill((0, 0, 0))
             all_sprites.draw(screen)
@@ -63,29 +65,30 @@ class Hub():
             brokenStones.update()
             pygame.display.flip()
             clock.tick(10)
+        if just_quit:
+            sys.exit()
         self.endScreen()
-        pygame.quit()
 
-    def startScreen(self):
+    def startScreen(self):  # начальный экран
         backgroundFirst = pygame.image.load("Cheshuya/Sprites/cave.jpg")
         back = pygame.sprite.Sprite()
         back.image = backgroundFirst
         back.rect = back.image.get_rect()
         back.rect.x = 0
         back.rect.y = 0
-        all_sprites.add(back)
+        all_sprites.add(back)  # фон
         press_space = pygame.image.load("Cheshuya/Sprites/press_space.png")
         space = pygame.sprite.Sprite()
         space.image = press_space
         space.rect = back.image.get_rect()
         space.rect.x = 280
-        space.rect.y = 300
+        space.rect.y = 300  # "нажмите на пробел"
         start_game = pygame.image.load("Cheshuya/Sprites/start_game.png")
         start = pygame.sprite.Sprite()
         start.image = start_game
         start.rect = back.image.get_rect()
         start.rect.x = 250
-        start.rect.y = 150
+        start.rect.y = 150  # название игры
         all_sprites.add(space)
         all_sprites.add(start)
         running = True
@@ -100,7 +103,7 @@ class Hub():
         screen2 = screen.copy()
         fade = pygame.Surface((960, 480))
         fade.fill((0, 0, 0))
-        for a in range(0, 300):
+        for a in range(0, 300):  # красивое затемнение
             screen1 = screen2.copy()
             fade.set_alpha(a)
             screen1.blit(fade, (0, 0))
@@ -114,13 +117,11 @@ class Hub():
 
     def endScreen(self):
         self.end.enter = False
+        font = pygame.font.SysFont('Consolas', 32)
         con = sqlite3.connect("Cheshuya/PlayersData.db")
         cur = con.cursor()
-        cur.execute("""UPDATE Player
-                        SET current = 1""")
-        cur.execute("""UPDATE Player
-                        SET score = 0""")
-        con.commit()
+        a = cur.execute('''SELECT score FROM Player''').fetchone()
+        des = font.render(f"Your score {a[0]}", 1, (0, 254, 255))
         backgroundFirst = pygame.image.load("Cheshuya/Sprites/cave.jpg")
         back = pygame.sprite.Sprite()
         back.image = backgroundFirst
@@ -140,6 +141,8 @@ class Hub():
         creators.rect = back.image.get_rect()
         creators.rect.x = 250
         creators.rect.y = 500
+        x = 250
+        y = 700
         all_sprites.add(creators)
         all_sprites.add(thank)
         running = True
@@ -147,15 +150,18 @@ class Hub():
         while running:
             if creators.rect.y != 100:
                 creators.rect = creators.rect.move(0, -1)
+            x += 10
+            y += 10
+            screen.blit(des, (100, 100))
             thank.rect = thank.rect.move(0, -1)
             clock.tick(50)
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        running = False
+                    running = False
             all_sprites.draw(screen)
             all_sprites.update()
             pygame.display.flip()
+            pygame.display.update()
         screen2 = screen.copy()
         fade = pygame.Surface((960, 480))
         fade.fill((0, 0, 0))
@@ -168,26 +174,40 @@ class Hub():
         pygame.time.delay(5)
         screen.fill((0, 0, 0))
         all_sprites.remove(back)
+        run = True
+        while run:
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        run = False
+            screen.blit(des, (370, 200))
+            pygame.display.update()
+
+        cur.execute("""UPDATE Player
+                        SET current = 1""")
+        cur.execute("""UPDATE Player
+                        SET score = 0""")
+        con.commit()
         pygame.quit()
         sys.exit()
 
-    def nowhereToEnter(self):
-        self.end.enter = True
+    def nowhereToEnter(self):  # удаление всех камней и возможность завершить игру
+        self.end.enter = True  #
         for sprite in stone_sprites:
             stone_sprites.remove(sprite)
             brokenStone = BrokenStone(sprite.x, sprite.y + 40)
             brokenStones.add(brokenStone)
 
 
-class Dino(pygame.sprite.Sprite):
+class Dino(pygame.sprite.Sprite):  # миленький динозаврик
     def __init__(self, sheet, columns, rows, x, y, hub):
         super().__init__(all_sprites)
         self.clock = pygame.time.Clock()
-        self.framesRun = []
-        self.framesRunLeft = []
-        self.framesIdle = []
-        self.framesIdleLeft = []
-        self.cut_sheet(sheet, columns, rows)
+        self.framesRun = []  # бег
+        self.framesRunLeft = []  # бег влево
+        self.framesIdle = []  # спокойствие
+        self.framesIdleLeft = []  # спокойствие влево
+        self.cut_sheet(sheet, columns, rows)  # нарезаем спрайты для анимации
         self.cur_frame = 0
         self.image = self.framesIdle[self.cur_frame]
         self.rect = self.rect.move(x, y)
@@ -195,7 +215,7 @@ class Dino(pygame.sprite.Sprite):
         self.last = 'idle'
         self.hub = hub
 
-    def cut_sheet(self, sheet, columns, rows):
+    def cut_sheet(self, sheet, columns, rows):  # нарезание спрайтов
         self.rect = pygame.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
@@ -206,15 +226,15 @@ class Dino(pygame.sprite.Sprite):
                     frame_location = (self.rect.w * i, self.rect.h * j)
                     self.framesRun.append(sheet.subsurface(pygame.Rect(frame_location, self.rect.size)))
         for image in self.framesIdle:
-            self.framesIdleLeft.append(pygame.transform.flip(image, True, False))
+            self.framesIdleLeft.append(pygame.transform.flip(image, True, False))  # спокойствие влево
         for image in self.framesRun:
-            self.framesRunLeft.append(pygame.transform.flip(image, True, False))
+            self.framesRunLeft.append(pygame.transform.flip(image, True, False))  # бег влево
 
     def update(self):
-        keys = pygame.key.get_pressed()
+        keys = pygame.key.get_pressed()  # нажатые клавиши
         idle = True
         if keys[pygame.K_RETURN]:
-            a = self.checkCollide()
+            a = self.checkCollide()  # проверка коллизий
             if a == 'end_game':
                 self.hub.endScreen()
             if a:
@@ -266,17 +286,17 @@ class Dino(pygame.sprite.Sprite):
                     self.image = self.framesRun[self.cur_frame]
         self.image = pygame.transform.scale(self.image, (100, 100))
 
-    def move(self, x, y):
+    def move(self, x, y):  # движение
         self.rect = self.rect.move(x, y)
 
-    def checkCollide(self):
+    def checkCollide(self):  # проверка коллизий
         a = pygame.sprite.collide_mask(self, self.hub.end)
-        if a:
+        if a and self.hub.end.enter:  # коллизия динозаврика с *активированной* статуей
             return 'end_game'
         for sprite in stone_sprites:
-            a = pygame.sprite.collide_mask(self, sprite)
+            a = pygame.sprite.collide_mask(self, sprite)  # коллизия динозаврика с камнем
             if a:
-                return sprite.hard
+                return sprite.hard  # возвращаем сложность
         return False
 
 
@@ -291,32 +311,32 @@ class Stone(pygame.sprite.Sprite):  # камень с рунами
         self.hard = setting
         self.settings = {1: ('Cheshuya/Sprites/easy.png', 0),
                         2: ('Cheshuya/Sprites/medium.png', -20),
-                        3:  ('Cheshuya/Sprites/hard.png', 0)}
+                        3:  ('Cheshuya/Sprites/hard.png', 0)}  # картинки сложностей
 
     def update(self):
         enter_sprites.empty()
-        a = pygame.sprite.collide_mask(self, self.dino)
+        a = pygame.sprite.collide_mask(self, self.dino)  # коллизия с динозавриком
         if a:
-            enter = pygame.sprite.Sprite()
-            enter.image = pygame.image.load(self.settings[self.hard][0])
-            enter.rect = enter.image.get_rect()
-            enter.rect.x = self.x + self.settings[self.hard][1]
-            enter.rect.y = self.y - 50
-            enter_sprites.add(enter)
+            setting = pygame.sprite.Sprite()
+            setting.image = pygame.image.load(self.settings[self.hard][0])
+            setting.rect = setting.image.get_rect()
+            setting.rect.x = self.x + self.settings[self.hard][1]
+            setting.rect.y = self.y - 50
+            enter_sprites.add(setting)
             enter_sprites.update()
-            enter_sprites.draw(screen)
+            enter_sprites.draw(screen)  # рисуем надпись со сложностью
 
 
-class BrokenStone(pygame.sprite.Sprite):
+class BrokenStone(pygame.sprite.Sprite):  # сломанный камень
     def __init__(self, x, y):
         super().__init__(brokenStones)
         self.image = pygame.image.load("Cheshuya/Sprites/BrokenStone.png")
         self.x, self.y = x, y
         self.rect = self.image.get_rect()
-        self.rect = self.rect.move(x, y)
+        self.rect = self.rect.move(x, y)  # обычное создание спрайта без каких-либо особенностей
 
 
-class EndGame(pygame.sprite.Sprite):
+class EndGame(pygame.sprite.Sprite):  # статуя конца игры
     def __init__(self, x, y, dino):
         super().__init__(all_sprites)
         self.image = pygame.image.load("Cheshuya/Sprites/Shop.png")
@@ -324,10 +344,10 @@ class EndGame(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(x, y)
         self.dino = dino
-        self.enter = False
+        self.enter = False  # активация
 
     def update(self):
-        if self.enter:
+        if self.enter:  # если активирована
             enter_sprites.empty()
             a = pygame.sprite.collide_mask(self, self.dino)
             if a:
@@ -338,7 +358,7 @@ class EndGame(pygame.sprite.Sprite):
                 enter.rect.y = self.y - 50
                 enter_sprites.add(enter)
                 enter_sprites.update()
-                enter_sprites.draw(screen)
+                enter_sprites.draw(screen)  # рисуем надпись enter
 
 
 class Level():  # уровень
@@ -411,13 +431,15 @@ class Level():  # уровень
         res = False
         while running:
             for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
                 if event.type == pygame.USEREVENT:
                     counter -= 1
                     if counter > 0:
                         text = str(counter)
                     else:
                         res = 'lose'
-                elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 3:
                         if zoom1:
                             zoom1 = False
